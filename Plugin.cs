@@ -1,7 +1,6 @@
 ﻿using SimpleJSON;
 using System.IO;
 using System.Reflection;
-using UnityEngine;
 
 namespace CMOSC
 {
@@ -21,7 +20,7 @@ namespace CMOSC
         }
 
         [EventPassedThreshold]
-        private void EventPassed(bool init, BeatmapObject data)
+        private void EventPassed(BeatmapObject data)
         {
             oSCMessageSender.EventPassed(data);
         }
