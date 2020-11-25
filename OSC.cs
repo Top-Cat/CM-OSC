@@ -268,7 +268,7 @@ namespace CMOSC
                 return;
 
             Sender.Send(packet, length, remoteHostName, remotePort);
-            Debug.Log("osc message sent to "+remoteHostName+" port "+remotePort+" len="+length);
+//            Debug.Log("osc message sent to "+remoteHostName+" port "+remotePort+" len="+length);
         }
 
         /// <summary>
@@ -634,7 +634,6 @@ namespace CMOSC
         /// <param name="oscMessage">The OSC Message to send.</param>   
         public void Send(OscMessage oscMessage)
         {
-            Debug.Log("Validate C");
             byte[] packet = new byte[1000];
             int length = OscMessageToPacket(oscMessage, packet, 1000);
             OscPacketIO.SendPacket(packet, length);

@@ -9,13 +9,13 @@ namespace CMOSC
     public class Plugin
     {
         private OSCMessageSender oSCMessageSender;
-        
+
         [Init]
         private void Init()
         {
             var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var jsonCfg = JSON.Parse(File.ReadAllText(Path.Combine(assemblyFolder, "config.json")));
-            var cfg = new Config(jsonCfg["ip"].Value, jsonCfg["port"].AsInt);
+            var cfg = new Config(jsonCfg["ip"].Value, jsonCfg["port"].AsInt, jsonCfg["chroma"].AsInt);
 
             oSCMessageSender = new OSCMessageSender(cfg);
         }

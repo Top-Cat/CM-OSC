@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -38,26 +39,54 @@ namespace CMOSC
         public void EventPassed(BeatmapObject data)
         {
             if (!readyToGo) return;
-            Debug.Log("Validate A");
             MapEvent e = data as MapEvent;
             if (!e.IsUtilityEvent) //Filter out Ring Spin, Ring Zoom, and Laser Speeds
             {
                 List<OscMessage> messages = new List<OscMessage>(); //Collection of messages to mass send
                 OscMessage mainMessage = new OscMessage();
                 mainMessage.address = $"/pb/{e._type}/{e._value}";
-                messages.Add(mainMessage);
-                if (e._value >= ColourManager.RGB_INT_OFFSET) //If we have a Chroma event in our hands...
+
+                if (config.Chroma != 1)
                 {
-                    Color color = ColourManager.ColourFromInt(e._value); //Grab Chroma color from data
-                    OscMessage r = new OscMessage();
-                    OscMessage g = new OscMessage(); //We hvae to make a new message for each RGB value, yay!
-                    OscMessage b = new OscMessage();
-                    r.address = $"/exec/\"R\"/{color.r}"; //Color values are floats from 0-1
-                    g.address = $"/exec/\"G\"/{color.g}";
-                    b.address = $"/exec/\"B\"/{color.b}";
-                    messages.AddRange(new List<OscMessage>() { r, g, b }); //Smack these guys into our messages list
+                    if (data._customData.HasKey("_color"))
+                    {
+                        var colorPart = data._customData["_color"].AsArray;
+                        byte r = (byte)(colorPart[0].AsFloat * 255);
+                        byte g = (byte)(colorPart[1].AsFloat * 255);
+                        byte b = (byte)(colorPart[2].AsFloat * 255);
+
+                        mainMessage.values.Add(r << 16 | g << 8 | b);
+                    }
+                    else if (data._customData.HasKey("_lightGradient") && data._customData["_lightGradient"].HasKey("_startColor"))
+                    {
+                        var colorPart = data._customData["_lightGradient"]["_startColor"].AsArray;
+                        byte r = (byte)(colorPart[0].AsFloat * 255);
+                        byte g = (byte)(colorPart[1].AsFloat * 255);
+                        byte b = (byte)(colorPart[2].AsFloat * 255);
+
+                        mainMessage.values.Add(r << 16 | g << 8 | b);
+                    }
+                    else if (e._value >= ColourManager.RGB_INT_OFFSET)
+                    {
+                        mainMessage.values.Add(e._value - ColourManager.RGB_INT_OFFSET);
+                    }
+                    messages.Add(mainMessage);
                 }
-                Debug.Log("Validate B");
+                else
+                {
+                    messages.Add(mainMessage);
+                    if (e._value >= ColourManager.RGB_INT_OFFSET) //If we have a Chroma event in our hands...
+                    {
+                        Color color = ColourManager.ColourFromInt(e._value); //Grab Chroma color from data
+                        OscMessage r = new OscMessage();
+                        OscMessage g = new OscMessage(); //We hvae to make a new message for each RGB value, yay!
+                        OscMessage b = new OscMessage();
+                        r.address = $"/exec/\"R\"/{color.r}"; //Color values are floats from 0-1
+                        g.address = $"/exec/\"G\"/{color.g}";
+                        b.address = $"/exec/\"B\"/{color.b}";
+                        messages.AddRange(new List<OscMessage>() { r, g, b }); //Smack these guys into our messages list
+                    }
+                }
                 foreach (OscMessage message in messages) osc?.Send(message); //Send those guys down the pipe.
             }
         }
